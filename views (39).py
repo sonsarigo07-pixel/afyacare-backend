@@ -1,0 +1,1 @@
+from rest_framework import viewsets, permissions; from .models import Drug; from .serializers import DrugSerializer; class DrugViewSet(viewsets.ModelViewSet): queryset=Drug.objects.all().order_by('name'); serializer_class=DrugSerializer; permission_classes=[permissions.IsAuthenticated]
