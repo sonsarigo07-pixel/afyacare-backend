@@ -1,1 +1,0 @@
-from rest_framework.routers import DefaultRouter; from .views import ConsultationViewSet, PrescriptionViewSet; r=DefaultRouter(); r.register('', ConsultationViewSet); r2=DefaultRouter(); r2.register('prescriptions', PrescriptionViewSet); urlpatterns = r.urls + r2.urls

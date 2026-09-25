@@ -1,42 +1,59 @@
+
 import base64, requests, datetime
 from django.conf import settings
-from decouple import config
 
 def get_mpesa_token():
-    consumer_key = settings.MPESA_CONSUMER_KEY
-    consumer_secret = settings.MPESA_CONSUMER_SECRET
     env = settings.MPESA_ENV
-    base_url = 'https://sandbox.safaricom.co.ke' if env=='sandbox' else 'https://api.safaricom.co.ke'
-    url = f"{base_url}/oauth/v1/generate?grant_type=client_credentials"
-    r = requests.get(url, auth=(consumer_key, consumer_secret))
-    r.raise_for_status()
-    return r.json()['access_token'], base_url
+    url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials" if env == "sandbox" else "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    try:
+        r = requests.get(url, auth=(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET), timeout=15)
+        r.raise_for_status()
+        return r.json().get("access_token")
+    except Exception as e:
+        print(f"Token error: {e}")
+        return None
 
-def stk_push(phone, amount, account_ref, description="AfyaCare Payment"):
-    token, base_url = get_mpesa_token()
-    shortcode = settings.MPESA_SHORTCODE
-    passkey = settings.MPESA_PASSKEY
-    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    password = base64.b64encode(f"{shortcode}{passkey}{timestamp}".encode()).decode()
+def stk_push(phone, amount, bill_id, description="AfyaCare Bill"):
+    token = get_mpesa_token()
+    if not token:
+        return {"success": False, "message": "Could not get MPESA token - check CONSUMER_KEY/SECRET in Render"}
 
-    # Normalize phone to 2547XXXXXXXX
-    if phone.startswith('0'): phone = '254' + phone[1:]
-    if phone.startswith('+'): phone = phone[1:]
+    # Format phone to 254...
+    phone = phone.strip().replace(" ", "")
+    if phone.startswith("0"):
+        phone = "254" + phone[1:]
+    if phone.startswith("+"):
+        phone = phone[1:]
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    password_str = settings.MPESA_SHORTCODE + settings.MPESA_PASSKEY + timestamp
+    password = base64.b64encode(password_str.encode()).decode()
 
-    headers = {'Authorization': f'Bearer {token}'}
+    env = settings.MPESA_ENV
+    url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest" if env == "sandbox" else "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+
     payload = {
-        "BusinessShortCode": shortcode,
+        "BusinessShortCode": settings.MPESA_SHORTCODE,
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
-        "Amount": int(amount),
+        "Amount": int(float(amount)),
         "PartyA": phone,
-        "PartyB": shortcode,
+        "PartyB": settings.MPESA_SHORTCODE,
         "PhoneNumber": phone,
         "CallBackURL": settings.MPESA_CALLBACK_URL,
-        "AccountReference": account_ref,
-        "TransactionDesc": description
+        "AccountReference": f"AFYA{bill_id}",
+        "TransactionDesc": description[:20]
     }
-    url = f"{base_url}/mpesa/stkpush/v1/processrequest"
-    resp = requests.post(url, json=payload, headers=headers)
-    return resp.json()
+
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    try:
+        r = requests.post(url, json=payload, headers=headers, timeout=20)
+        data = r.json()
+        print(f"STK Response: {data}")
+        if data.get("ResponseCode") == "0":
+            return {"success": True, "checkout_id": data.get("CheckoutRequestID"), "message": data.get("CustomerMessage")}
+        else:
+            return {"success": False, "message": data.get("errorMessage") or data.get("ResponseDescription") or str(data)}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
