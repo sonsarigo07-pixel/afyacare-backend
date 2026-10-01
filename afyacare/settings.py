@@ -18,7 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'billing',  # <-- MUST BE HERE
+    'billing',   # <-- ADD THIS IF MISSING
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
