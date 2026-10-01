@@ -9,9 +9,11 @@ def home(request):
         "admin": "/admin/",
         "api": "/api/",
         "endpoints": {
+            "health": "/api/health/",
             "patients": "/api/patients/",
             "bills": "/api/bills/",
-            "payments": "/api/payments/"
+            "mpesa_push": "/api/mpesa/push/",
+            "mpesa_callback": "/api/mpesa/callback/"
         },
         "version": "v10.25"
     })
@@ -19,5 +21,5 @@ def home(request):
 urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
-    path('api/', include('billing.urls')),
+    path('api/', include('billing.urls')),  # <-- THIS WAS MISSING!
 ]
