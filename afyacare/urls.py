@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse
 
 def home(request):
@@ -7,11 +7,17 @@ def home(request):
         "status": "AfyaCare Backend is LIVE 🎉",
         "message": "Welcome to AfyaCare API",
         "admin": "/admin/",
-        "api": "/api/ - coming soon",
+        "api": "/api/",
+        "endpoints": {
+            "patients": "/api/patients/",
+            "bills": "/api/bills/",
+            "payments": "/api/payments/"
+        },
         "version": "v10.25"
     })
 
 urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
+    path('api/', include('billing.urls')),
 ]
