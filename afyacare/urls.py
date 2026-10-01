@@ -21,5 +21,5 @@ def home(request):
 urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
-    path('api/', include('billing.urls')),  # <-- THIS WAS MISSING!
+    path('api/', include('billing.urls')),
 ]
