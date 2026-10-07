@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 import dj_database_url
@@ -9,6 +8,16 @@ SECRET_KEY = config('SECRET_KEY', default='django-afyacare-secret-2024')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = ['*']
 
+# --- FIX CSRF FOR RENDER (ADD THIS BLOCK) ---
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com",
+    "https://afyacare-backend-1-sa2z.onrender.com",
+    "https://afyacare-backend-1-eeox.onrender.com",
+]
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+# --- END FIX ---
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -18,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'billing',   # <-- ADD THIS IF MISSING
+    'billing',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
