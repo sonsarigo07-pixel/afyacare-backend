@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.http import HttpResponsefrom django.contrib import admin
+from django.http import HttpResponse
+from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 
